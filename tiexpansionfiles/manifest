@@ -1,0 +1,18 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 0.1.0
+apiversion: 2
+description: My module
+author: Olivier Morandi
+license: Specify your license
+copyright: Copyright (c) 2014 by Your Company
+
+
+# these should not be edited
+name: tiexpansionfiles
+moduleid: ti.expansionfiles
+guid: 9dd86a81-0660-450b-a8c2-4502bf3ddbd8
+platform: android
+minsdk: 3.2.3.GA

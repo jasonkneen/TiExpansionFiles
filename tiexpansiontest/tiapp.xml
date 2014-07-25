@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ti:app xmlns:ti="http://ti.appcelerator.org">
+	<id>com.omorandi.tiexpansiontest</id>
+	<name>tiexpansiontest</name>
+	<version>1.1</version>
+	<publisher>not specified</publisher>
+	<url></url>
+	<description>not specified</description>
+	<copyright>not specified</copyright>
+	<icon>appicon.png</icon>
+	<fullscreen>false</fullscreen>
+	<navbar-hidden>false</navbar-hidden>
+	<analytics>true</analytics>
+	<guid>a65ea5c4-1a11-4c76-8ae2-da36cdac675d</guid>
+	<property name="ti.ui.defaultunit" type="string">dp</property>
+	<property name="ti.android.licensing.key" type="string">
+		MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi95MOOAYhQIXMN4xHgMxlrKtJ8Ydxp1yjU0ArO6L1zex11v981Lzck9lpP5Tqt1gw01h3g9hnQrjrJOTMJTaFXzAn61/9slsAiSC6FNSZhkbABuvTPzgRmM3MzVUu9h6GQvwsunCUihXBOgWMNSDl0LUHQ/Eht3uFlRtC5Db18cFwLlzyuIoFDdDGqPw8wOoZapjirAvdzkveXCY7GZxajtyZAY0JVyqeY5VY8qFAyKORP5EvAO6GQhebIEcjS1oTKxtQuA3p497AFYRUPq1STz1rKGdXu2OnvOc+XfqlixBzVdnds7QfDQ/qgspd5Yjo8zVjgb6y428KZD69cq5iwIDAQAB
+	</property>
+	<property name="ti.android.licensing.salt" type="string">
+		[170,218,244,241,16,93,95,38,195,124,122,151,45,178,176,189,104,103,50,103]
+	</property>
+
+
+	<ios>
+		<plist>
+			<dict>
+				<key>UISupportedInterfaceOrientations~iphone</key>
+				<array>
+					<string>UIInterfaceOrientationPortrait</string>
+				</array>
+				<key>UISupportedInterfaceOrientations~ipad</key>
+				<array>
+					<string>UIInterfaceOrientationPortrait</string>
+					<string>UIInterfaceOrientationPortraitUpsideDown</string>
+					<string>UIInterfaceOrientationLandscapeLeft</string>
+					<string>UIInterfaceOrientationLandscapeRight</string>
+				</array>
+				<key>UIRequiresPersistentWiFi</key>
+				<false/>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+				<key>UIStatusBarHidden</key>
+				<false/>
+				<key>UIStatusBarStyle</key>
+				<string>UIStatusBarStyleDefault</string>
+			</dict>
+		</plist>
+	</ios>
+	<android xmlns:android="http://schemas.android.com/apk/res/android">
+		<manifest android:versionCode="3" android:versionName="2.0.2"/>
+	</android>
+	<mobileweb>
+		<precache>
+		</precache>
+		<splash>
+			<enabled>true</enabled>
+			<inline-css-images>true</inline-css-images>
+		</splash>
+		<theme>default</theme>
+	</mobileweb>
+	<modules>
+		<module platform="android">ti.expansionfiles</module>
+	</modules>
+	<deployment-targets>
+		<target device="android">true</target>
+		<target device="blackberry">false</target>
+		<target device="ipad">false</target>
+		<target device="iphone">false</target>
+		<target device="mobileweb">false</target>
+		<target device="tizen">false</target>
+	</deployment-targets>
+	<sdk-version>3.3.0.GA</sdk-version>
+</ti:app>
