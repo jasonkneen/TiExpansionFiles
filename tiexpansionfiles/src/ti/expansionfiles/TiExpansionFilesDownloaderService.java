@@ -74,6 +74,7 @@ public class TiExpansionFilesDownloaderService extends DownloaderService {
      */
     @Override
     public String getAlarmReceiverClassName() {
+    	Log.d(TAG, "getAlarmReceiverClassName");
         return TiExpansionFilesAlarmReceiver.class.getName();
     }
 

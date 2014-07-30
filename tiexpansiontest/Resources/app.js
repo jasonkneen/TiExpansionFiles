@@ -1,7 +1,8 @@
 var expansionFiles = require('ti.expansionfiles');
 
 expansionFiles.addEventListener('downloadProgress', function(e) {
-    console.log('downloadProgress: ' + JSON.stringify(e));
+    var progress = e.overallProgress / e.overallTotal * 100;
+    console.log('downloadProgress: ' + progress + "%");
 });
 
 
@@ -10,33 +11,116 @@ expansionFiles.addEventListener('validateAPKStarted', function() {
 });
 
 expansionFiles.addEventListener('validateAPKProgress', function(e) {
-    console.log('validateAPKProgress: ' + JSON.stringify(e));
+    var progress = e.overallProgress / e.overallTotal * 100;
+    console.log('validateAPKProgress: ' + progress + "%");
 });
 
 expansionFiles.addEventListener('validateAPKFinished', function() {
     console.log('validateAPKFinished');
 });
 
-expansionFiles.addEventListener('downloaderStateChanged', function(e) {
-    console.log('downloaderStateChanged: ' + e.state);
+expansionFiles.addEventListener('downloaderServiceConnected', function() {
+    console.log('downloaderServiceConnected');
 });
 
-expansionFiles.downloadXAPKs({
-    mainFile: {
-        version: 3,
-        size: 211
-    },
-    patchFile: {
-        version: 3,
-        size: 213
+expansionFiles.addEventListener('downloaderStateChanged', function(e) {
+    if (e.state == expansionFiles.STATE_COMPLETED) {
+        console.log('download completed');
+        var filePaths = expansionFiles.getDownloadedFilePaths();
+        console.log('main file location: ' + filePaths.mainFile);
+        console.log('patch file location: ' + filePaths.patchFile);
+
     }
 });
+
+expansionFiles.addEventListener('downloaderStateChanged', function(e) {
+    console.log('downloaderStateChanged: ' + e.state);
+    var state = "unknown";
+    switch(e.state) {
+        case expansionFiles.STATE_IDLE:
+            state = "STATE_IDLE";
+            break;
+        case expansionFiles.STATE_FETCHING_URL:
+            state = "STATE_FETCHING_URL";
+            break;
+        case expansionFiles.STATE_CONNECTING:
+            state = "STATE_CONNECTING";
+            break;
+        case expansionFiles.STATE_DOWNLOADING:
+            state = "STATE_DOWNLOADING";
+            break;
+        case expansionFiles.STATE_COMPLETED:
+            state = "STATE_COMPLETED";
+            break;
+        case expansionFiles.STATE_PAUSED_NETWORK_UNAVAILABLE:
+            state = "STATE_PAUSED_NETWORK_UNAVAILABLE";
+            break;
+        case expansionFiles.STATE_PAUSED_BY_REQUEST:
+            state = "STATE_PAUSED_BY_REQUEST";
+            break;
+        case expansionFiles.STATE_PAUSED_WIFI_DISABLED_NEED_CELLULAR_PERMISSION:
+            state = "STATE_PAUSED_WIFI_DISABLED_NEED_CELLULAR_PERMISSION";
+            break;
+        case expansionFiles.STATE_PAUSED_NEED_CELLULAR_PERMISSION:
+            state = "STATE_PAUSED_NEED_CELLULAR_PERMISSION";
+            break;
+        case expansionFiles.STATE_PAUSED_WIFI_DISABLED:
+            state = "STATE_PAUSED_WIFI_DISABLED";
+            break;
+        case expansionFiles.STATE_PAUSED_NEED_WIFI:
+            state = "STATE_PAUSED_NEED_WIFI";
+            break;
+        case expansionFiles.STATE_PAUSED_ROAMING:
+            state = "STATE_PAUSED_ROAMING";
+            break;
+        case expansionFiles.STATE_PAUSED_NETWORK_SETUP_FAILURE:
+            state = "STATE_PAUSED_NETWORK_SETUP_FAILURE";
+            break;
+        case expansionFiles.STATE_PAUSED_SDCARD_UNAVAILABLE:
+            state = "STATE_PAUSED_SDCARD_UNAVAILABLE";
+            break;
+        case expansionFiles.STATE_FAILED_UNLICENSED:
+            state = "STATE_FAILED_UNLICENSED";
+            break;
+        case expansionFiles.STATE_FAILED_FETCHING_URL:
+            state = "STATE_FAILED_FETCHING_URL";
+            break;
+        case expansionFiles.STATE_FAILED_SDCARD_FULL:
+            state = "STATE_FAILED_SDCARD_FULL";
+            break;
+        case expansionFiles.STATE_FAILED_CANCELED:
+            state = "STATE_FAILED_CANCELED";
+            break;
+        case expansionFiles.STATE_FAILED:
+            state = "STATE_FAILED";
+            break;
+    }
+    console.log('downloaderStateChanged to: ' + state);
+});
+
+
+
 
 // this sets the background color of the master UIView (when there are no windows/tab groups on it)
 Titanium.UI.setBackgroundColor('#000');
 
 // create tab group
 var tabGroup = Titanium.UI.createTabGroup();
+
+
+tabGroup.addEventListener('open', function() {
+    expansionFiles.downloadXAPKs({
+        mainFile: {
+            version: 4,
+            size: 12013233
+        },
+        patchFile: {
+            version: 3,
+            size: 213
+        }
+    });
+
+});
 
 
 //

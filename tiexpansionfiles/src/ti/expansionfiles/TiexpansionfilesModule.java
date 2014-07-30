@@ -23,6 +23,7 @@ import org.appcelerator.kroll.common.Log;
 import ti.expansionfiles.ZipResourceFile.ZipEntryRO;
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
@@ -49,14 +50,53 @@ import com.google.android.vending.expansion.downloader.IStub;
 public class TiexpansionfilesModule extends KrollModule implements IDownloaderClient 
 {
 
-	// Standard Debugging variables
 	private static final String TAG = "TiexpansionfilesModule";
 	private IDownloaderService mRemoteService;
     private IStub mDownloaderClientStub;
     private boolean mStatePaused;
     private int mState;
     private boolean mCancelValidation;
-
+    
+    @Kroll.constant
+    static final int STATE_IDLE = IDownloaderClient.STATE_IDLE;
+    @Kroll.constant
+    static final int STATE_FETCHING_URL = IDownloaderClient.STATE_FETCHING_URL;
+    @Kroll.constant
+    static final int STATE_CONNECTING = IDownloaderClient.STATE_CONNECTING;
+    @Kroll.constant
+    static final int STATE_DOWNLOADING = IDownloaderClient.STATE_DOWNLOADING;
+    @Kroll.constant
+    static final int STATE_COMPLETED = IDownloaderClient.STATE_COMPLETED;
+    @Kroll.constant
+    static final int STATE_PAUSED_NETWORK_UNAVAILABLE = IDownloaderClient.STATE_PAUSED_NETWORK_UNAVAILABLE;
+    @Kroll.constant
+    static final int STATE_PAUSED_BY_REQUEST = IDownloaderClient.STATE_PAUSED_BY_REQUEST;
+    @Kroll.constant
+    static final int STATE_PAUSED_WIFI_DISABLED_NEED_CELLULAR_PERMISSION = IDownloaderClient.STATE_PAUSED_WIFI_DISABLED_NEED_CELLULAR_PERMISSION;
+    @Kroll.constant
+    static final int STATE_PAUSED_NEED_CELLULAR_PERMISSION = IDownloaderClient.STATE_PAUSED_NEED_CELLULAR_PERMISSION;
+    @Kroll.constant
+    static final int STATE_PAUSED_WIFI_DISABLED = IDownloaderClient.STATE_PAUSED_WIFI_DISABLED;
+    @Kroll.constant
+    static final int STATE_PAUSED_NEED_WIFI = IDownloaderClient.STATE_PAUSED_NEED_WIFI;
+    @Kroll.constant
+    static final int STATE_PAUSED_ROAMING = IDownloaderClient.STATE_PAUSED_ROAMING;
+    @Kroll.constant
+    static final int STATE_PAUSED_NETWORK_SETUP_FAILURE = IDownloaderClient.STATE_PAUSED_NETWORK_SETUP_FAILURE;
+    @Kroll.constant
+    static final int STATE_PAUSED_SDCARD_UNAVAILABLE = IDownloaderClient.STATE_PAUSED_SDCARD_UNAVAILABLE;
+    @Kroll.constant
+    static final int STATE_FAILED_UNLICENSED = IDownloaderClient.STATE_FAILED_UNLICENSED;
+    @Kroll.constant
+    static final int STATE_FAILED_FETCHING_URL = IDownloaderClient.STATE_FAILED_FETCHING_URL;
+    @Kroll.constant
+    static final int STATE_FAILED_SDCARD_FULL = IDownloaderClient.STATE_FAILED_SDCARD_FULL;
+    @Kroll.constant
+    static final int STATE_FAILED_CANCELED = IDownloaderClient.STATE_FAILED_CANCELED;
+    @Kroll.constant
+    static final int STATE_FAILED = IDownloaderClient.STATE_FAILED;
+    
+    
     /**
      * Calculating a moving average for the validation speed so we don't get
      * jumpy calculations for time etc.
@@ -79,8 +119,14 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
 		// put module init code that needs to run when the application is created
 	}
 	
-	Activity getThisActivity() {
-		return activity.get();
+	Activity getRootActivity() {
+		TiApplication tiApp = TiApplication.getInstance();
+		return tiApp.getRootOrCurrentActivity();
+	}
+	
+	Activity getCurrentActivity() {
+		TiApplication tiApp = TiApplication.getInstance();
+		return tiApp.getCurrentActivity();
 	}
 	
 	/**
@@ -125,8 +171,10 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
      */
     boolean expansionFilesDelivered(Activity activity) 
     {
+    	Log.d(TAG, "expansionFilesDelivered? checking files:");
         for (XAPKFile xf : xAPKS) {
             String fileName = Helpers.getExpansionAPKFileName(activity, xf.mIsMain, xf.mFileVersion);
+            Log.d(TAG, "\tfile: " +  fileName);
             if (!Helpers.doesFileExist(activity, fileName, xf.mFileSize, false))
                 return false;
         }
@@ -146,13 +194,14 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
 
             @Override
             protected void onPreExecute() {
+            	Log.d(TAG, "validateAPKStarted");
             	fireEvent("validateAPKStarted", null);
                 super.onPreExecute();
             }
 
             @Override
             protected Boolean doInBackground(Object... params) {
-            	Activity thisActivity = getThisActivity();
+            	Activity thisActivity = getRootActivity();
                 for (XAPKFile xf : xAPKS) {
                     String fileName = Helpers.getExpansionAPKFileName(thisActivity, xf.mIsMain, xf.mFileVersion);
                     if (!Helpers.doesFileExist(thisActivity, fileName, xf.mFileSize, false))
@@ -249,6 +298,7 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
             
             @Override
             protected void onProgressUpdate(DownloadProgressInfo... values) {
+            	Log.d(TAG, "validateAPKSProgress");
             	DownloadProgressInfo progressInfo = values[0];
             	KrollDict evtObj = new KrollDict();
             	evtObj.put("currentSpeed", progressInfo.mCurrentSpeed);
@@ -283,6 +333,7 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
     
     void startDownload() {
     	 mDownloaderClientStub = DownloaderClientMarshaller.CreateStub(this, TiExpansionFilesDownloaderService.class);
+    	 mDownloaderClientStub.connect(activity.get());
     }
     
     
@@ -321,9 +372,34 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
     		xAPKS.add(patchDescr);
     	}
     	
+    	Log.d(TAG, xAPKS.toString());
+    	
     	initialize();
     }
     
+    
+    String getxAPKFilePath(String type, int version) {
+    	Activity thisActivity = getRootActivity();
+    	String fileName = Helpers.getExpansionAPKFileName(thisActivity, type == "mainFile", version);
+    	return Helpers.generateSaveFileName(thisActivity, fileName);
+    }
+    
+    
+    @Kroll.method
+    String getFilePath(String type, int version) {
+    	return getxAPKFilePath(type, version);
+    }
+    
+    @Kroll.method
+    KrollDict getDownloadedFilePaths() {
+    	KrollDict d = new KrollDict();
+    	for(XAPKFile f: xAPKS) {
+    		String type = f.mIsMain ? "mainFile" : "patchFile";
+    		String path = getxAPKFilePath(type, f.mFileVersion);
+    		d.put(type, path);
+    	}
+    	return d;
+    }
     
     /**
      * Called when the activity is first create; we wouldn't create a layout in
@@ -331,10 +407,13 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
      * without downloading.
      */
     private void initialize() {
-    	Activity thisActivity = getThisActivity();
+    	Activity rootActivity = getRootActivity();
+    	Log.d(TAG, "initialize. RootActivity: " + rootActivity.getClass().getName());
+    	
         /**
          * Both downloading and validation make use of the "download" UI
          */
+    	
         startDownload();
 
         /**
@@ -342,26 +421,19 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
          * delivered (presumably by Market) For free titles, this is probably
          * worth doing. (so no Market request is necessary)
          */
-        if (!expansionFilesDelivered(thisActivity)) {
+        if (!expansionFilesDelivered(rootActivity)) {
 
             try {
-                Intent launchIntent = thisActivity.getIntent();
-                Intent intentToLaunchThisActivityFromNotification = new Intent(thisActivity, thisActivity.getClass());
-                intentToLaunchThisActivityFromNotification.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intentToLaunchThisActivityFromNotification.setAction(launchIntent.getAction());
-
-                if (launchIntent.getCategories() != null) {
-                    for (String category : launchIntent.getCategories()) {
-                        intentToLaunchThisActivityFromNotification.addCategory(category);
-                    }
-                }
+                Intent intentToLaunchThisActivityFromNotification = new Intent(rootActivity, rootActivity.getClass());
+                intentToLaunchThisActivityFromNotification.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP |Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                intentToLaunchThisActivityFromNotification.setAction(Intent.ACTION_MAIN);
+                intentToLaunchThisActivityFromNotification.addCategory(Intent.CATEGORY_LAUNCHER);
 
                 // Build PendingIntent used to open this activity from
                 // Notification
-                PendingIntent pendingIntent = PendingIntent.getActivity(thisActivity, 0, intentToLaunchThisActivityFromNotification, PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent pendingIntent = PendingIntent.getActivity(rootActivity, 0, intentToLaunchThisActivityFromNotification, PendingIntent.FLAG_CANCEL_CURRENT);
                 // Request to start the download
-                int startResult = DownloaderClientMarshaller.startDownloadServiceIfRequired(thisActivity, pendingIntent, TiExpansionFilesDownloaderService.class);
+                int startResult = DownloaderClientMarshaller.startDownloadServiceIfRequired(rootActivity, pendingIntent, TiExpansionFilesDownloaderService.class);
 
                 if (startResult != DownloaderClientMarshaller.NO_DOWNLOAD_REQUIRED) {
                     // The DownloaderService has started downloading the files,
@@ -382,36 +454,7 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
     }
 
     
-    
-    
-    /**
-     * Connect the stub to our service 
-     */
-    @Kroll.method
-    protected void attachDownloaderService() {
-        if (null != mDownloaderClientStub) {
-            mDownloaderClientStub.connect(getThisActivity());
-        }
-    }
-
-    /**
-     * Disconnect the stub from our service on stop
-     */
-    @Kroll.method
-    protected void detachDownloaderService() {
-        if (null != mDownloaderClientStub) {
-            mDownloaderClientStub.disconnect(getThisActivity());
-        }
-    }
-
-    private void setState(int newState) {
-        if (mState != newState) {
-            mState = newState;
-            KrollDict evtObj = new KrollDict();
-            evtObj.put("state", Helpers.getDownloaderStringResourceIDFromState(newState));
-            fireEvent("downloaderStateChanged", evtObj);
-        }
-    }
+   
 
     /**
      * Critical implementation detail. In onServiceConnected we create the
@@ -423,6 +466,8 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
     public void onServiceConnected(Messenger m) {
         mRemoteService = DownloaderServiceMarshaller.CreateProxy(m);
         mRemoteService.onClientUpdated(mDownloaderClientStub.getMessenger());
+        Log.d(TAG, "onServiceConnected");
+        fireEvent("downloaderServiceConnected", null);
     }
 
     /**
@@ -432,80 +477,13 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
      */
     @Override
     public void onDownloadStateChanged(int newState) {
-        setState(newState);
-        boolean showDashboard = true;
-        boolean showCellMessage = false;
-        boolean paused;
-        boolean indeterminate;
-        switch (newState) {
-            case IDownloaderClient.STATE_IDLE:
-                // STATE_IDLE means the service is listening, so it's
-                // safe to start making calls via mRemoteService.
-                paused = false;
-                indeterminate = true;
-                break;
-            case IDownloaderClient.STATE_CONNECTING:
-            case IDownloaderClient.STATE_FETCHING_URL:
-                showDashboard = true;
-                paused = false;
-                indeterminate = true;
-                break;
-            case IDownloaderClient.STATE_DOWNLOADING:
-                paused = false;
-                showDashboard = true;
-                indeterminate = false;
-                break;
-
-            case IDownloaderClient.STATE_FAILED_CANCELED:
-            case IDownloaderClient.STATE_FAILED:
-            case IDownloaderClient.STATE_FAILED_FETCHING_URL:
-            case IDownloaderClient.STATE_FAILED_UNLICENSED:
-                paused = true;
-                showDashboard = false;
-                indeterminate = false;
-                break;
-            case IDownloaderClient.STATE_PAUSED_NEED_CELLULAR_PERMISSION:
-            case IDownloaderClient.STATE_PAUSED_WIFI_DISABLED_NEED_CELLULAR_PERMISSION:
-                showDashboard = false;
-                paused = true;
-                indeterminate = false;
-                showCellMessage = true;
-                break;
-
-            case IDownloaderClient.STATE_PAUSED_BY_REQUEST:
-                paused = true;
-                indeterminate = false;
-                break;
-            case IDownloaderClient.STATE_PAUSED_ROAMING:
-            case IDownloaderClient.STATE_PAUSED_SDCARD_UNAVAILABLE:
-                paused = true;
-                indeterminate = false;
-                break;
-            case IDownloaderClient.STATE_COMPLETED:
-                showDashboard = false;
-                paused = false;
-                indeterminate = false;
-                validateXAPKZipFiles();
-                return;
-            default:
-                paused = true;
-                indeterminate = true;
-                showDashboard = true;
+    	if (mState != newState) {
+            mState = newState;
+            KrollDict evtObj = new KrollDict();
+            evtObj.put("state", newState);
+            Log.d(TAG, "downloaderStateChanged to " + newState);
+            fireEvent("downloaderStateChanged", evtObj);
         }
-        /*
-        int newDashboardVisibility = showDashboard ? View.VISIBLE : View.GONE;
-        
-        if (mDashboard.getVisibility() != newDashboardVisibility) {
-            mDashboard.setVisibility(newDashboardVisibility);
-        }
-        int cellMessageVisibility = showCellMessage ? View.VISIBLE : View.GONE;
-        if (mCellMessage.getVisibility() != cellMessageVisibility) {
-            mCellMessage.setVisibility(cellMessageVisibility);
-        }
-
-        mPB.setIndeterminate(indeterminate);
-        setButtonPausedState(paused);
-        */
     }
 
     /**
@@ -519,6 +497,7 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
     	evtObj.put("overallProgress", progressInfo.mOverallProgress);
     	evtObj.put("overallTotal", progressInfo.mOverallTotal);
     	evtObj.put("timeRemaining", progressInfo.mTimeRemaining);
+    	Log.d(TAG, "onDownloadProgress: " + evtObj.toString());
         fireEvent("downloadProgress", evtObj);
     }
     

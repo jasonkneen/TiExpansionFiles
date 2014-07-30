@@ -47,7 +47,7 @@
 		</plist>
 	</ios>
 	<android xmlns:android="http://schemas.android.com/apk/res/android">
-		<manifest android:versionCode="3" android:versionName="2.0.2"/>
+		<manifest android:versionCode="6" android:versionName="2.0.6"/>
 	</android>
 	<mobileweb>
 		<precache>
