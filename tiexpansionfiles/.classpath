@@ -15,5 +15,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="/Users/olivier/Code/tiexp/tiexpansionfiles/lib/downloader_library.jar"/>
 	<classpathentry kind="lib" path="/Users/olivier/Code/tiexp/tiexpansionfiles/lib/licensing_library.jar"/>
+	<classpathentry kind="lib" path="/Users/olivier/Library/Application Support/Titanium/mobilesdk/osx/3.2.3.GA/android/modules/titanium-filesystem.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

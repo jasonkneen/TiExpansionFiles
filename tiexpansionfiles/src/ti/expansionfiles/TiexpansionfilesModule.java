@@ -12,6 +12,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.zip.CRC32;
 
 import org.appcelerator.kroll.KrollDict;
@@ -23,20 +24,12 @@ import org.appcelerator.kroll.common.Log;
 import ti.expansionfiles.ZipResourceFile.ZipEntryRO;
 import android.app.Activity;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.os.Messenger;
 import android.os.SystemClock;
-import android.provider.Settings;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
-import com.android.vending.expansion.downloader.R;
 import com.google.android.vending.expansion.downloader.Constants;
 import com.google.android.vending.expansion.downloader.DownloadProgressInfo;
 import com.google.android.vending.expansion.downloader.DownloaderClientMarshaller;
@@ -53,9 +46,9 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
 	private static final String TAG = "TiexpansionfilesModule";
 	private IDownloaderService mRemoteService;
     private IStub mDownloaderClientStub;
-    private boolean mStatePaused;
     private int mState;
     private boolean mCancelValidation;
+    private boolean mInitDone = false;
     
     @Kroll.constant
     static final int STATE_IDLE = IDownloaderClient.STATE_IDLE;
@@ -450,7 +443,7 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
         } else {
             validateXAPKZipFiles();
         }
-
+        mInitDone = true;
     }
 
     
@@ -502,7 +495,113 @@ public class TiexpansionfilesModule extends KrollModule implements IDownloaderCl
     }
     
     
-
+    private int[] getFileVersions() {
+    	int[] versions = new int[2];
+    	versions[0] = 0;
+    	versions[1] = 0;
+    	for(XAPKFile f: xAPKS) {
+    		if (f.mIsMain) {
+    			versions[0] = f.mFileVersion;
+    		}
+    		else {
+    			versions[1] = f.mFileVersion;
+    		}
+    	}
+    	return versions;
+    }
+    
+    
+	@Kroll.method
+	public FileProxy getFileFromZip(String path) throws Exception
+	{
+		if (!mInitDone) {
+			throw new Exception("you should first call downloadXAPKs()");
+		}
+		int[] versions = getFileVersions();
+		return new FileProxy(getRootActivity(), path, versions[0], versions[1]);
+	}
+	
+	@Kroll.method
+	public FileProxy getFileFromMain(String path) throws Exception
+	{
+		if (!mInitDone) {
+			throw new Exception("you should first call downloadXAPKs()");
+		}
+		int[] versions = getFileVersions();
+		String mainExpFile = getxAPKFilePath("mainFile", versions[0]);
+		return new FileProxy(getRootActivity(), path, mainExpFile);
+	}
+	
+	@Kroll.method
+	public FileProxy getFileFromPatch(String path) throws Exception
+	{
+		if (!mInitDone) {
+			throw new Exception("you should first call downloadXAPKs()");
+		}
+		int[] versions = getFileVersions();
+		String mainExpFile = getxAPKFilePath("patchFile", versions[1]);
+		return new FileProxy(getRootActivity(), path, mainExpFile);
+	}
+	
+	@Kroll.method
+	public String[] listAllFilesMerged() throws Exception
+	{
+		if (!mInitDone) {
+			throw new Exception("you should first call downloadXAPKs()");
+		}
+		int[] versions = getFileVersions();
+		ZipResourceFile zf = APKExpansionSupport.getAPKExpansionZipFile(getRootActivity(), versions[0], versions[1]);
+		ZipEntryRO[] entries = zf.getAllEntries();
+		List<String> listing = new ArrayList<String>();
+		if (entries != null) {
+			int len = entries.length;
+			for (int i = 0; i < len; i++) {
+				listing.add(entries[i].mFileName);
+			}
+		}
+		return listing != null ? listing.toArray(new String[0]) : null;
+	}
+	
+	@Kroll.method
+	public String[] listAllFilesInMain() throws Exception
+	{
+		if (!mInitDone) {
+			throw new Exception("you should first call downloadXAPKs()");
+		}
+		int[] versions = getFileVersions();
+		String mainExpFile = getxAPKFilePath("mainFile", versions[0]);
+		ZipResourceFile zf = new ZipResourceFile(mainExpFile);
+		ZipEntryRO[] entries = zf.getAllEntries();
+		List<String> listing = new ArrayList<String>();
+		if (entries != null) {
+			int len = entries.length;
+			for (int i = 0; i < len; i++) {
+				listing.add(entries[i].mFileName);
+			}
+		}
+		return listing != null ? listing.toArray(new String[0]) : null;
+	}
+	
+	@Kroll.method
+	public String[] listAllFilesInPatch() throws Exception
+	{
+		if (!mInitDone) {
+			throw new Exception("you should first call downloadXAPKs()");
+		}
+		int[] versions = getFileVersions();
+		String mainExpFile = getxAPKFilePath("patchFile", versions[1]);
+		ZipResourceFile zf = new ZipResourceFile(mainExpFile);
+		ZipEntryRO[] entries = zf.getAllEntries();
+		List<String> listing = new ArrayList<String>();
+		if (entries != null) {
+			int len = entries.length;
+			for (int i = 0; i < len; i++) {
+				listing.add(entries[i].mFileName);
+			}
+		}
+		return listing != null ? listing.toArray(new String[0]) : null;
+	}
+	
 }
 
 

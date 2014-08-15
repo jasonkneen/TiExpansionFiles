@@ -5,6 +5,7 @@
 	<projects>
 		<project>downloader_library</project>
 		<project>licensing_library</project>
+		<project>zip_file</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -18,9 +18,9 @@ in order to reflect the actual location of the required tools in your system.
 
 The build process can be started by executing
 
-	$ ant 
+	$ ant
 
-from the command line. 
+from the command line.
 
 Once completed, the module package can be found in the `dist` directory and it can be installed globally by unzipping it in the appropriate Titanium directory. For example, on a Mac OS X system:
 
@@ -33,11 +33,11 @@ Once completed, the module package can be found in the `dist` directory and it c
 ## Referencing the module in your Titanium Mobile application
 
 In order to use the module in your Titanium application, add the following lines to your `tiapp.xml` file:
-  
+
 	<modules>
 		<module platform="android">ti.expansionfiles</module>
 	</modules>
-	
+
 
 You'll also need to configure the module with your Android Play Store publisher key, and a random salt array, by adding them as app properties in `tiapp.xml`:
 
@@ -47,16 +47,16 @@ You'll also need to configure the module with your Android Play Store publisher 
 	<property name="ti.android.licensing.salt" type="string">
 	<!-- your 20 bytes salt array -->
 	</property>
-	
+
 like for example:
 
 	<property name="ti.android.licensing.key" type="string">
 		MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi95M
-		OOAYhQIXMN4xHgMxlrKtJ8Ydxp1yjU0ArO6L1zex11v981Lzck9l 
+		OOAYhQIXMN4xHgMxlrKtJ8Ydxp1yjU0ArO6L1zex11v981Lzck9l
 		...
 		qgspd5Yjo8zVjgb6y428KZD69cq5iwIDAQAB
 	</property>
-	
+
 	<property name="ti.android.licensing.salt" type="string">
 		[170,218,244,241,16,93,95,38,195,124,122,151,45,178,176,189,104,103,50,103]
 	</property>
@@ -90,7 +90,7 @@ Finally we can start the download of the expansion files uploaded with the app A
             size: 213
         }
     });
-    
+
 If the requested files are already present on the device no download will be performed, though they will be checked to be valid `.zip` files. The validation process can be monitored through the `validateAPKProgress` event.
 
 Downloaded files are stored on the SD card and their actual path can be retrieved through the `getDownloadedFilePaths()` method:
@@ -107,13 +107,32 @@ Downloaded files are stored on the SD card and their actual path can be retrieve
 	* Arguments:
 		* `fileDescriptors` (object): a dictionary containing the description of the expansion files uploaded to the Play Store. The dictionary must contain a `mainFile` property, and it can contain an optional `patchFile` property. These correspond respectively to the main and patch file descriptors for the expansion files uploaded to the Play Store. Each file descriptor must contain a `version` and a `size` property. The `version` property corresponds to the version of the APK with which the expansion file has been uploaded. The `size` argument is the size in bytes of the file (this information is used for zip file verification).
 	* return: nothing
-	
+
 * `getDownloadedFilePaths()`: gets the actual paths of the downloaded expansion files.
 	* Arguments: none
 	* return: a dictionary containing the following properties:
 		* `mainFile` (string): local path of the main expansion file
 		* `patchFile` (string): local path of the patch expansion file
-	
+
+* `listAllFilesInMain()`: gets a list of the files contained in the main expansion file
+    * Arguments: none
+    * return: an array containing a list of all the paths of the files contained in the main expansion file
+
+* `listAllFilesInPatch()`: gets a list of the files contained in the main expansion file
+    * Arguments: none
+    * return: an array containing a list of all the paths of the files contained in the patch expansion file
+
+* `getFileFromMain(path)`: gets a `TiExpansionFiles.File` object representing a file contained (and zipped) in the main expansion file, providing direct access to it, without needin to first decompressing the expansion file.
+    * Arguments:
+        * `path` (string): the path inside of the **main** zip expansion file
+    * return: a `TiExpansionFiles.File` object
+
+* `getFileFromPatch(path)`: gets a `TiExpansionFiles.File` object representing a file contained (and zipped) in the patch expansion file, providing direct access to it, without needin to first decompressing the expansion file.
+    * Arguments:
+        * `path` (string): the path inside of the **patch** zip expansion file
+    * return: a `TiExpansionFiles.File` object
+
+
 ### Constants
 
 * Download state constants: the `downloaderStateChanged` event will report one of the following states through the `state` property of the event object.
@@ -142,7 +161,7 @@ Downloaded files are stored on the SD card and their actual path can be retrieve
 #### Download events:
 
 * `downloaderServiceConnected`: fired when the background downloader service connects to the Play Store backend
-* `downloadProgress`: fired during the expansion files download in order to report the overall progress of the operation. 
+* `downloadProgress`: fired during the expansion files download in order to report the overall progress of the operation.
 	* event properties:
 		* `overallProgress` (number): amount of bytes downloaded so far
 		* `overallTotal` (number): total size in bytes of the download
@@ -161,4 +180,36 @@ these events are fired throughout the validation process of already downloaded e
 * `validateAPKFinished`: fired at the end of the validation process
 
 
-		
+
+## `TiExpansionFiles.File` object reference
+
+A `TiExpansionFiles.File` object represents a file contained in an expansion file and it provides direct access to it, without needin to first decompressing the expansion file. It provides an API very close to that of the standard `Ti.Filesystem.File` object of the Titanium SDK.
+
+### Methods
+Most of the methods of the `Ti.Filesystem.File` object are supported, among those the followings are the most relevant:
+
+* `exists()`: tells if the specified file is present in the expansion file
+    * Arguments: none
+    * return: true if the file is present, false otherwise
+
+* `getName()`:
+    * Arguments: none
+    * return (string): the name of the file
+
+* `extension()`:
+    * Arguemnts: none
+    * return (string): the extension of the file
+
+* `getSize()`:
+    * Arguments: none
+    * return (string): the size of the file in bytes
+
+
+* `read()`: reads the content of the file in a TiBlob
+    * Arguments: none
+    * return (TiBlob): a blob representing the contents of the file
+
+
+
+
+

@@ -17,6 +17,8 @@ expansionFiles.addEventListener('validateAPKProgress', function(e) {
 
 expansionFiles.addEventListener('validateAPKFinished', function() {
     console.log('validateAPKFinished');
+    listFilesInZip();
+    updateImagesWithFileFromZip();
 });
 
 expansionFiles.addEventListener('downloaderServiceConnected', function() {
@@ -29,7 +31,8 @@ expansionFiles.addEventListener('downloaderStateChanged', function(e) {
         var filePaths = expansionFiles.getDownloadedFilePaths();
         console.log('main file location: ' + filePaths.mainFile);
         console.log('patch file location: ' + filePaths.patchFile);
-
+        listFilesInZip();
+        updateImagesWithFileFromZip();
     }
 });
 
@@ -101,6 +104,33 @@ expansionFiles.addEventListener('downloaderStateChanged', function(e) {
 
 
 
+var listFilesInZip = function() {
+    Ti.API.info('Main file contains the following files: ');
+    files = expansionFiles.listAllFilesInMain();
+    files.forEach(function(file) {
+        Ti.API.info(file);
+    });
+
+    Ti.API.info('Patch file contains the following files: ');
+    files = expansionFiles.listAllFilesInPatch();
+    files.forEach(function(file) {
+        Ti.API.info(file);
+    });
+
+    var inexFile = expansionFiles.getFileFromMain('fake.jpg');
+    Ti.API.info('fake file in main exists: ' + inexFile.exists());
+    inexFile = expansionFiles.getFileFromPatch('fake.jpg');
+    Ti.API.info('fake file in patch exists: ' + inexFile.exists());
+};
+
+
+var updateImagesWithFileFromZip = function() {
+    var image1File = expansionFiles.getFileFromMain('01.jpg');
+    imageView1.image = image1File.read();
+    var image2File = expansionFiles.getFileFromPatch('patch/IMG_0731.JPG');
+    imageView2.image = image2File.read();
+};
+
 // this sets the background color of the master UIView (when there are no windows/tab groups on it)
 Titanium.UI.setBackgroundColor('#000');
 
@@ -111,16 +141,16 @@ var tabGroup = Titanium.UI.createTabGroup();
 tabGroup.addEventListener('open', function() {
     expansionFiles.downloadXAPKs({
         mainFile: {
-            version: 4,
-            size: 12013233
+            version: 7,
+            size: 12001918
         },
         patchFile: {
-            version: 3,
-            size: 213
+            version: 7,
+            size: 152502
         }
     });
-
 });
+
 
 
 //
@@ -137,14 +167,20 @@ var tab1 = Titanium.UI.createTab({
 });
 
 var label1 = Titanium.UI.createLabel({
-	color:'#999',
-	text:'I am Window 1',
-	font:{fontSize:20,fontFamily:'Helvetica Neue'},
-	textAlign:'center',
-	width:'auto'
+    top: '10dp',
+    color:'#999',
+    text:'Image from main file',
+    font:{fontSize:20,fontFamily:'Helvetica Neue'},
+    textAlign:'center',
+    width:'auto'
 });
 
 win1.add(label1);
+
+var imageView1 = Ti.UI.createImageView({
+    borderColor: '#ddd'
+});
+win1.add(imageView1);
 
 //
 // create controls tab and root window
@@ -160,8 +196,9 @@ var tab2 = Titanium.UI.createTab({
 });
 
 var label2 = Titanium.UI.createLabel({
+    top: '10dp',
 	color:'#999',
-	text:'I am Window 2',
+	text:'Image from patch file',
 	font:{fontSize:20,fontFamily:'Helvetica Neue'},
 	textAlign:'center',
 	width:'auto'
@@ -169,7 +206,10 @@ var label2 = Titanium.UI.createLabel({
 
 win2.add(label2);
 
-
+var imageView2 = Ti.UI.createImageView({
+    borderColor: '#ddd'
+});
+win2.add(imageView2);
 
 //
 //  add tabs
