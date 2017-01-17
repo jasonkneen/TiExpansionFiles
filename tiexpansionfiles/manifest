@@ -2,9 +2,9 @@
 # this is your module manifest and used by Titanium
 # during compilation, packaging, distribution, etc.
 #
-version: 2.0.0
-apiversion: 3
-architectures: armeabi-v7a x86
+version: 1.1.0
+apiversion: 2
+architectures: armeabi armeabi-v7a x86
 description: TiExpansionFiles
 author: Olivier Morandi
 license: Apache 1
@@ -16,4 +16,4 @@ name: tiexpansionfiles
 moduleid: ti.expansionfiles
 guid: 9dd86a81-0660-450b-a8c2-4502bf3ddbd8
 platform: android
-minsdk: 6.0.0
+minsdk: 5.5.0
