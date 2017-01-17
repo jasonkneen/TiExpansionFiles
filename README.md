@@ -14,7 +14,7 @@ For additional information on the module, please refer to the `README.md` file c
 
 ## Thanks
 
-- Hans Knoechel ([@hansemannn](https://twitter.com/hansemannn)) for updating for 6.0.0.GA
+- Hans Knoechel ([@hansemannn](https://twitter.com/hansemannnn)) for updating for 6.0.0.GA
 - Oliver Modandi ([@omorandi](https://twitter.com/olivier_morandi)) for the first version
 
 ## License & Copyright
