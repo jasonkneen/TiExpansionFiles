@@ -12,6 +12,10 @@ This repository contains the following:
 
 For additional information on the module, please refer to the `README.md` file contained in the `tiexpansionfiles` project directory.
 
+## Thanks
+
+Hans Knoechel ([@hansemannn](https://twitter.com/hansemannn)) for updating for 6.0.0.GA
+
 ## License & Copyright
 
 <pre>
