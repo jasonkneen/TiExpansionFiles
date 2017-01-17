@@ -18,86 +18,100 @@ in order to reflect the actual location of the required tools in your system.
 
 The build process can be started by executing
 
-	$ ant
+```bash
+appc ti build -p android --build-only
+```
 
 from the command line.
 
 Once completed, the module package can be found in the `dist` directory and it can be installed globally by unzipping it in the appropriate Titanium directory. For example, on a Mac OS X system:
 
-
-	ant
-	unzip -uo dist/ti.expansionfiles-android-0.1.0.zip -d ~/Library/Application\ Support/Titanium
-
-
+```bash
+appc ti build -p android --build-only
+unzip -uo dist/ti.expansionfiles-android-2.0.0.zip -d ~/Library/Application\ Support/Titanium
+```
 
 ## Referencing the module in your Titanium Mobile application
 
 In order to use the module in your Titanium application, add the following lines to your `tiapp.xml` file:
 
-	<modules>
-		<module platform="android">ti.expansionfiles</module>
-	</modules>
-
+```xml
+<modules>
+    <module platform="android">ti.expansionfiles</module>
+</modules>
+```
 
 You'll also need to configure the module with your Android Play Store publisher key, and a random salt array, by adding them as app properties in `tiapp.xml`:
 
-	<property name="ti.android.licensing.key" type="string">
-	<!-- your BASE64 licensing key -->
-	</property>
-	<property name="ti.android.licensing.salt" type="string">
-	<!-- your 20 bytes salt array -->
-	</property>
+```xml
+<property name="ti.android.licensing.key" type="string"><!-- your BASE64 licensing key --></property>
+<property name="ti.android.licensing.salt" type="string"><!-- your 20 bytes salt array --></property>
+```
 
 like for example:
 
-	<property name="ti.android.licensing.key" type="string">
+```xml
+<property name="ti.android.licensing.key" type="string">
 		MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi95M
-		OOAYhQIXMN4xHgMxlrKtJ8Ydxp1yjU0ArO6L1zex11v981Lzck9l
+		OOAYhQIXMN4xHgMxlrKtJ8Ydxp1yjU0ArO6L1zex11v981Lzxxxx
 		...
 		qgspd5Yjo8zVjgb6y428KZD69cq5iwIDAQAB
-	</property>
+</property>
 
-	<property name="ti.android.licensing.salt" type="string">
+<property name="ti.android.licensing.salt" type="string">
 		[170,218,244,241,16,93,95,38,195,124,122,151,45,178,176,189,104,103,50,103]
-	</property>
+</property>
+```
 
-The BASE-64 licensing key can be retrieved from your personal Play publisher profile, while the random salt array can be generated, for example trough the following service: [http://www.random.org/integers/?num=20&min=0&max=255&col=5&base=10&format=html&rnd=new](http://www.random.org/integers/?num=20&min=0&max=255&col=5&base=10&format=html&rnd=new)
+The BASE-64 licensing key can be retrieved from your personal Play publisher profile, while the random salt array can be generated, 
+for example trough the following service: 
+
+* [http://www.random.org/integers/?num=20&min=0&max=255&col=5&base=10&format=html&rnd=new](http://www.random.org/integers/?num=20&min=0&max=255&col=5&base=10&format=html&rnd=new)
 
 ## Accessing the Module from JavaScript code
 
 First we must `require()` the module:
-
-	var expansionFiles = require('ti.expansionfiles');
+```js
+var expansionFiles = require('ti.expansionfiles');
+```
 
 then, in order to be notified about download progress events we can register event listeners, like for example:
 
-	expansionFiles.addEventListener('downloadProgress', function(e) {
-        var progress = e.overallProgress / e.overallTotal * 100;
-        console.log('downloadProgress: ' + progress + "%");
-    });
+```js
+expansionFiles.addEventListener('downloadProgress', function(e) {
+    var progress = e.overallProgress / e.overallTotal * 100;
+    console.log('downloadProgress: ' + progress + "%");
+});
+```
 
 (For a comprehensive list of supported events, please see the next section of this document)
 
 Finally we can start the download of the expansion files uploaded with the app APK through the Play Store dashboard:
 
-	expansionFiles.downloadXAPKs({
-        mainFile: {
-            version: 4,
-            size: 12013233
-        },
-        patchFile: {
-            version: 3,
-            size: 213
-        }
-    });
+```js
+expansionFiles.downloadXAPKs({
+    mainFile: {
+        version: 4,
+        size: 12013233
+    },
+    patchFile: {
+        version: 3,
+        size: 213
+    }
+});
+```
 
-If the requested files are already present on the device no download will be performed, though they will be checked to be valid `.zip` files. The validation process can be monitored through the `validateAPKProgress` event.
+If the requested files are already present on the device no download will be performed, though they will be checked to be valid `.zip` files. 
+The validation process can be monitored through the `validateAPKProgress` event.
 
 Downloaded files are stored on the SD card and their actual path can be retrieved through the `getDownloadedFilePaths()` method:
 
-	var filePaths = expansionFiles.getDownloadedFilePaths();
-	console.log('main file location: ' + filePaths.mainFile);
-	console.log('patch file location: ' + filePaths.patchFile);
+```
+var filePaths = expansionFiles.getDownloadedFilePaths();
+
+Ti.API.info('Main file location: ' + filePaths.mainFile);
+Ti.API.info('Patch file location: ' + filePaths.patchFile);
+```
 
 ## Module Reference
 

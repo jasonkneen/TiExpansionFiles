@@ -11,3 +11,11 @@ This repository contains the following:
     * `tiexpansiontest`: a Titanium mobile (classic) test application
 
 For additional information on the module, please refer to the `README.md` file contained in the `tiexpansionfiles` project directory.
+
+## License
+
+Apache 1
+
+## Copyright
+
+Jason Kneen ([@jasonkneen](https://twitter.com/jasonkneen))
